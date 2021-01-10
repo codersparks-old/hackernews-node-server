@@ -1,6 +1,6 @@
 import {compare, hash} from 'bcryptjs'
 import { sign } from 'jsonwebtoken'
-import {APP_SECRET} from "../utils";
+import {APP_SECRET, getUserId, newLinkEvent, newVoteEvent} from "../utils";
 
 export const signup = async (parent:any, args:any, context:any, info:any) => {
     const password = await hash(args.password, 10);
@@ -40,13 +40,17 @@ export const post = async (_:any, args:any, context:any) => {
 
     const { userId } = context;
 
-    return await context.prisma.link.create({
+    const newLink = await context.prisma.link.create({
         data: {
             description: args.description,
             url: args.url,
             postedBy: { connect: { id: userId }}
         },
     });
+
+    await context.pubsub.publish(newLinkEvent, newLink);
+
+    return newLink;
 }
 
 export const updateLink = async (_:any, args:any, context:any) => {
@@ -62,8 +66,35 @@ export const updateLink = async (_:any, args:any, context:any) => {
 }
 
 export const deleteLink = async (_:any, args:any, context:any) => {
-    const link = await context.prisma.link.delete({where: { id: +args.id}});
+    const link = await context.prisma.link.delete({where: {id: +args.id}});
 
     return link;
+}
 
+export const vote = async (parent:any, args:any, context:any, info:any) => {
+    const  {userId} = context;
+
+    const vote = await context.prisma.vote.findUnique({
+        where: {
+            linkId_userId: {
+                linkId: Number(args.linkId),
+                userId: userId
+            }
+        }
+    });
+
+    if (Boolean(vote)) {
+        throw new Error(`Already voted for link: ${args.linkId}`);
+    }
+
+    const newVote = context.prisma.vote.create({
+        data: {
+            user: { connect: {id:userId}},
+            link: { connect: {id: Number(args.linkId)}},
+        }
+    })
+
+    context.pubsub.publish(newVoteEvent, newVote);
+
+    return newVote;
 }

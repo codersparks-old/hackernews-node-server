@@ -2,6 +2,8 @@ import { verify } from "jsonwebtoken";
 import { Request } from "express";
 
 export const APP_SECRET: string = 'GraphQL-is-aw3some';
+export const newLinkEvent:string = "NEW_LiNK";
+export const newVoteEvent:string = "NEW_VOTE";
 
 const getTokenPayload:string | object = (token:string) => verify(token, APP_SECRET);
 
@@ -19,14 +21,14 @@ export const getUserId = (req?: Request, authToken?: String) => {
             const {userId}  = getTokenPayload(token);
 
             return userId;
-        } else if (authToken) {
-            // @ts-ignore
-            const { userId } = getTokenPayload(authToken);
-            return userId;
         }
-
-        throw new Error('Not authenticated');
+    } else if (authToken) {
+        // @ts-ignore
+        const { userId } = getTokenPayload(authToken);
+        return userId;
     }
+
+    throw new Error('Not authenticated');
 }
 
 
