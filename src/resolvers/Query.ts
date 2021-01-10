@@ -1,0 +1,1 @@
+export const feed = (parent:any, args:any, context:any, info:any) => context.prisma.link.findMany()

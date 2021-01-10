@@ -6,13 +6,18 @@ import compression from "compression";
 import cors from 'cors';
 import { schemaWithResolvers as schema } from './schema';
 import { PrismaClient } from '@prisma/client';
+import { getUserId } from "./utils";
 
 const prisma = new PrismaClient();
 const app = express();
 const server = new ApolloServer({
     schema,
-    context: {
-        prisma,
+    context: ({req}) => {
+        return {
+            ...req,
+            prisma,
+            userId: req && req.headers.authorization ? getUserId(req) : null
+        }
     },
     validationRules: [depthLimit(7)],
 });
