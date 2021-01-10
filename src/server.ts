@@ -43,8 +43,8 @@ const httpServer = createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
 httpServer.listen(
-    {port: 3000},
+    {port: 4000},
     (): void => {
-        console.log('\n       GraphQL is now running on http://localhost:3000/graphql')
+        console.log('\n       GraphQL is now running on http://localhost:4000/graphql')
     }
 );
